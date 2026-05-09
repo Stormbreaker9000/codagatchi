@@ -117,6 +117,23 @@ pub fn update_stats(conn: &Connection, stats: &CreatureStats) -> Result<()> {
     Ok(())
 }
 
+/// Updates stats only if the creature is still alive. Returns false if the creature
+/// died between the caller's read and this write (game_loop TOCTOU guard).
+pub fn update_stats_if_alive(conn: &Connection, stats: &CreatureStats) -> Result<bool> {
+    let rows = conn.execute(
+        "UPDATE creature_stats SET hunger=?1, happiness=?2, energy=?3,
+         xp=?4, milestone_count=?5, starving_ticks=?6
+         WHERE creature_id=?7
+           AND EXISTS (SELECT 1 FROM creatures WHERE id=?7 AND status='alive')",
+        params![
+            stats.hunger, stats.happiness, stats.energy,
+            stats.xp, stats.milestone_count, stats.starving_ticks,
+            stats.creature_id
+        ],
+    )?;
+    Ok(rows > 0)
+}
+
 pub fn mark_creature_dead(conn: &Connection, creature_id: i64) -> Result<()> {
     conn.execute(
         "UPDATE creatures SET status='dead', is_active=0 WHERE id=?1",

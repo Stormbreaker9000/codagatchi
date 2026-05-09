@@ -46,7 +46,10 @@ pub fn feed(state: State<'_, AppState>, creature_id: i64) -> Result<CreatureStat
                 return Err("Creature ID mismatch".into());
             }
             let updated = creatures::apply_feed(stats);
-            db::update_stats(&conn, &updated).map_err(|e| e.to_string())?;
+            let alive = db::update_stats_if_alive(&conn, &updated).map_err(|e| e.to_string())?;
+            if !alive {
+                return Err("Creature died".into());
+            }
             Ok(updated)
         }
     }
@@ -63,7 +66,10 @@ pub fn play(state: State<'_, AppState>, creature_id: i64) -> Result<CreatureStat
                 return Err("Creature ID mismatch".into());
             }
             let updated = creatures::apply_play(stats);
-            db::update_stats(&conn, &updated).map_err(|e| e.to_string())?;
+            let alive = db::update_stats_if_alive(&conn, &updated).map_err(|e| e.to_string())?;
+            if !alive {
+                return Err("Creature died".into());
+            }
             Ok(updated)
         }
     }
