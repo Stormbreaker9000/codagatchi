@@ -320,9 +320,8 @@ pub fn get_collection(conn: &Connection) -> Result<Vec<(Creature, Species)>> {
 }
 
 pub fn set_active_creature(conn: &Connection, creature_id: i64) -> Result<()> {
-    conn.execute("UPDATE creatures SET is_active=0 WHERE is_active=1", [])?;
     conn.execute(
-        "UPDATE creatures SET is_active=1 WHERE id=?1 AND status='alive'",
+        "UPDATE creatures SET is_active = (id = ?1 AND status = 'alive')",
         params![creature_id],
     )?;
     Ok(())
