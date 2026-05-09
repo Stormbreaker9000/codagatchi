@@ -132,6 +132,7 @@ Static `Vec<Species>` in `creatures.rs`, seeded into the `species` SQLite table 
 | energy | INTEGER | 0–100 |
 | xp | INTEGER | cumulative |
 | milestone_count | INTEGER | eggs awarded so far |
+| starving_ticks | INTEGER | consecutive ticks at hunger = 0; resets to 0 when hunger > 0 |
 
 Kept separate from `creatures` so historical records stay clean.
 
