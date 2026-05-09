@@ -51,7 +51,11 @@ export function Settings({ onChanged }: Props) {
           min={10}
           max={3600}
           value={settings.tick_interval_secs}
-          onChange={e => patch({ tick_interval_secs: parseInt(e.target.value, 10) })}
+          onChange={e => {
+            const val = parseInt(e.target.value, 10);
+            if (!Number.isFinite(val) || val < 10 || val > 3600) return;
+            patch({ tick_interval_secs: val });
+          }}
         />
       </label>
     </div>
