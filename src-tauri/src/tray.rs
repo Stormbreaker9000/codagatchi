@@ -11,8 +11,14 @@ pub fn build(app: &mut App) -> tauri::Result<()> {
 
     let menu = Menu::with_items(app, &[&show_hide, &separator, &quit])?;
 
-    TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+    let mut builder = TrayIconBuilder::new();
+    if let Some(icon) = app.default_window_icon() {
+        builder = builder.icon(icon.clone());
+    } else {
+        eprintln!("[tray] warning: no default window icon configured; tray icon will be blank");
+    }
+
+    builder
         .menu(&menu)
         .show_menu_on_left_click(false)
         .tooltip("Codagatchi")
