@@ -10,9 +10,15 @@ interface Props {
 export function CreatureManager({ activeCreatureId, onSwitched }: Props) {
   const { getCollection, setActiveCreature } = useCommands();
   const [collection, setCollection] = useState<CollectionEntry[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getCollection().then(setCollection);
+    getCollection()
+      .then(setCollection)
+      .catch((err) => {
+        console.error('Failed to load collection:', err);
+        setError('Failed to load collection.');
+      });
   }, [activeCreatureId]);
 
   const handleSwitch = async (id: number) => {
@@ -23,7 +29,8 @@ export function CreatureManager({ activeCreatureId, onSwitched }: Props) {
   return (
     <div className="creature-manager">
       <h2>Collection</h2>
-      {collection.length === 0 && <p>No creatures yet. Hatch your first egg!</p>}
+      {error && <p className="error">{error}</p>}
+      {!error && collection.length === 0 && <p>No creatures yet. Hatch your first egg!</p>}
       {collection.map(({ creature, species }) => (
         <div key={creature.id} className={`collection-entry ${creature.is_active ? 'active' : ''}`}>
           <pre className="collection-ascii">{species.ascii_idle}</pre>
