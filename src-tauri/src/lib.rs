@@ -60,6 +60,7 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_active_creature,
+            commands::get_egg_count,
             commands::get_codex,
             commands::get_settings,
             commands::feed,

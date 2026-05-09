@@ -9,9 +9,14 @@ export function useGameState() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    invoke<CreatureState | null>('get_active_creature').then((state) => {
+    invoke<CreatureState | null>('get_active_creature').then(async (state) => {
       setCreatureState(state);
-      if (state) setEggCount(state.egg_count);
+      if (state) {
+        setEggCount(state.egg_count);
+      } else {
+        const count = await invoke<number>('get_egg_count');
+        setEggCount(count);
+      }
       setLoading(false);
     });
   }, []);

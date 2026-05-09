@@ -6,16 +6,16 @@ import {
 
 export function useCommands() {
   const feed = (creatureId: number) =>
-    invoke<CreatureStats>('feed', { creature_id: creatureId });
+    invoke<CreatureStats>('feed', { creatureId });
 
   const play = (creatureId: number) =>
-    invoke<CreatureStats>('play', { creature_id: creatureId });
+    invoke<CreatureStats>('play', { creatureId });
 
   const hatchEgg = () =>
     invoke<CreatureState>('hatch_egg');
 
   const setActiveCreature = (creatureId: number) =>
-    invoke<void>('set_active_creature', { creature_id: creatureId });
+    invoke<void>('set_active_creature', { creatureId });
 
   const getCodex = () =>
     invoke<CodexEntry[]>('get_codex');

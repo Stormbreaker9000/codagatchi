@@ -180,6 +180,12 @@ pub fn update_settings(
 }
 
 #[tauri::command]
+pub fn get_egg_count(state: State<'_, AppState>) -> Result<i32, String> {
+    let conn = state.db.lock().unwrap();
+    db::count_eggs(&conn).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn get_collection(state: State<'_, AppState>) -> Result<Vec<serde_json::Value>, String> {
     let conn = state.db.lock().unwrap();
     let rows = db::get_collection(&conn).map_err(|e| e.to_string())?;

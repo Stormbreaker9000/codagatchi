@@ -21,11 +21,16 @@ function App() {
   const [expanded, setExpanded] = useState(false);
   const [tab, setTab] = useState<Tab>('codex');
   const [busy, setBusy] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const toggleExpand = async () => {
     const next = !expanded;
     const size = next ? EXPANDED : WIDGET;
-    await getCurrentWindow().setSize(new LogicalSize(size.width, size.height));
+    try {
+      await getCurrentWindow().setSize(new LogicalSize(size.width, size.height));
+    } catch (e) {
+      console.error('setSize failed:', e);
+    }
     setExpanded(next);
   };
 
@@ -35,6 +40,8 @@ function App() {
     try {
       const stats = await feed(creatureState.creature.id);
       setCreatureState({ ...creatureState, stats });
+    } catch (e) {
+      setLastError(`feed: ${e}`);
     } finally {
       setBusy(false);
     }
@@ -46,6 +53,8 @@ function App() {
     try {
       const stats = await play(creatureState.creature.id);
       setCreatureState({ ...creatureState, stats });
+    } catch (e) {
+      setLastError(`play: ${e}`);
     } finally {
       setBusy(false);
     }
@@ -68,6 +77,12 @@ function App() {
 
   return (
     <div className="app">
+      {lastError && (
+        <div style={{ background: '#600', color: '#fcc', fontSize: 9, padding: '2px 6px', wordBreak: 'break-all' }}
+             onClick={() => setLastError(null)}>
+          {lastError}
+        </div>
+      )}
       <div className="widget-section">
         {creatureState ? (
           <>
