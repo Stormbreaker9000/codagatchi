@@ -66,6 +66,8 @@ function App() {
       const newState = await hatchEgg();
       setCreatureState(newState);
       setEggCount(newState.egg_count);
+    } catch (e) {
+      setLastError(`hatch: ${e}`);
     } finally {
       setBusy(false);
     }
