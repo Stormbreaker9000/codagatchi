@@ -1,50 +1,120 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { useState } from 'react';
+import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
+import { useGameState } from './hooks/useGameState';
+import { useCommands } from './hooks/useCommands';
+import { CreatureDisplay } from './components/Widget/CreatureDisplay';
+import { StatBars } from './components/Widget/StatBars';
+import { ActionButtons } from './components/Widget/ActionButtons';
+import { Codex } from './components/Expanded/Codex';
+import { CreatureManager } from './components/Expanded/CreatureManager';
+import { Settings } from './components/Expanded/Settings';
+import { Settings as SettingsType } from './types';
+
+const WIDGET = { width: 220, height: 280 };
+const EXPANDED = { width: 420, height: 560 };
+
+type Tab = 'codex' | 'collection' | 'settings';
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+  const { creatureState, eggCount, loading, setCreatureState, setEggCount } = useGameState();
+  const { feed, play, hatchEgg } = useCommands();
+  const [expanded, setExpanded] = useState(false);
+  const [tab, setTab] = useState<Tab>('codex');
+  const [busy, setBusy] = useState(false);
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+  const toggleExpand = async () => {
+    const next = !expanded;
+    const size = next ? EXPANDED : WIDGET;
+    await getCurrentWindow().setSize(new LogicalSize(size.width, size.height));
+    setExpanded(next);
+  };
+
+  const handleFeed = async () => {
+    if (!creatureState) return;
+    setBusy(true);
+    try {
+      const stats = await feed(creatureState.creature.id);
+      setCreatureState({ ...creatureState, stats });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handlePlay = async () => {
+    if (!creatureState) return;
+    setBusy(true);
+    try {
+      const stats = await play(creatureState.creature.id);
+      setCreatureState({ ...creatureState, stats });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleHatch = async () => {
+    setBusy(true);
+    try {
+      const newState = await hatchEgg();
+      setCreatureState(newState);
+      setEggCount(newState.egg_count);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="loading">Loading...</div>;
   }
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
-
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="app">
+      <div className="widget-section">
+        {creatureState ? (
+          <>
+            <CreatureDisplay state={creatureState} />
+            <StatBars stats={creatureState.stats} />
+            <ActionButtons
+              state={creatureState}
+              onFeed={handleFeed}
+              onPlay={handlePlay}
+              onHatch={handleHatch}
+              onToggleExpand={toggleExpand}
+              expanded={expanded}
+              disabled={busy}
+            />
+          </>
+        ) : (
+          <div className="no-creature">
+            <div>No active creature.</div>
+            {eggCount > 0 && (
+              <button onClick={handleHatch} disabled={busy}>
+                🥚 Hatch egg ({eggCount})
+              </button>
+            )}
+          </div>
+        )}
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+      {expanded && (
+        <div className="expanded-section">
+          <div className="tab-bar">
+            <button className={`tab ${tab === 'codex' ? 'active' : ''}`} onClick={() => setTab('codex')}>Codex</button>
+            <button className={`tab ${tab === 'collection' ? 'active' : ''}`} onClick={() => setTab('collection')}>Collection</button>
+            <button className={`tab ${tab === 'settings' ? 'active' : ''}`} onClick={() => setTab('settings')}>Settings</button>
+          </div>
+          <div className="tab-content">
+            {tab === 'codex' && <Codex />}
+            {tab === 'collection' && (
+              <CreatureManager
+                activeCreatureId={creatureState?.creature.id ?? null}
+                onSwitched={() => {}}
+              />
+            )}
+            {tab === 'settings' && <Settings onChanged={(_: SettingsType) => {}} />}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

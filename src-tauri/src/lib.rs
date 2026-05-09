@@ -13,38 +13,46 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_notification::init())
         .setup(|app| {
-            // Resolve database path in app data directory
             let app_data = app.path().app_data_dir()
                 .expect("could not resolve app data dir");
             std::fs::create_dir_all(&app_data)?;
             let db_path = app_data.join("codagatchi.db");
 
-            let conn = db::open(&db_path)
-                .expect("failed to open database");
+            // Seeding connection — dropped at end of this block
+            {
+                let conn = db::open(&db_path).expect("failed to open database");
+                let all_species = creatures::all_species();
+                db::seed_species(&conn, &all_species).expect("failed to seed species");
 
-            // Seed species on first run
-            let all_species = creatures::all_species();
-            db::seed_species(&conn, &all_species)
-                .expect("failed to seed species");
+                // Auto-seed a starter egg on first run (no creatures at all)
+                let egg_count = db::count_eggs(&conn).unwrap_or(0);
+                let creature_count: i32 = conn.query_row(
+                    "SELECT COUNT(*) FROM creatures WHERE status != 'egg'",
+                    [],
+                    |r| r.get(0),
+                ).unwrap_or(0);
+                if egg_count == 0 && creature_count == 0 {
+                    let now = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs() as i64;
+                    db::add_egg(&conn, now).expect("failed to add starter egg");
+                }
+            }
 
-            let db_arc = Arc::new(Mutex::new(conn));
+            // Commands connection
+            app.manage(AppState {
+                db: Mutex::new(db::open(&db_path).expect("failed to open db for commands")),
+            });
 
-            // Register shared state
-            app.manage(AppState { db: Mutex::new(
-                // We open a second connection for commands (separate from game loop)
-                db::open(&db_path).expect("failed to open db for commands")
-            )});
-
-            // Start game loop with its own connection
-            let loop_conn = db::open(&db_path)
-                .expect("failed to open db for game loop");
-            let loop_db = Arc::new(Mutex::new(loop_conn));
+            // Game loop connection
+            let loop_db = Arc::new(Mutex::new(
+                db::open(&db_path).expect("failed to open db for game loop"),
+            ));
             game_loop::start(app.handle().clone(), loop_db);
 
-            // Build tray
             tray::build(app)?;
 
-            // Request notification permission
             use tauri_plugin_notification::NotificationExt;
             let _ = app.notification().request_permission();
 
