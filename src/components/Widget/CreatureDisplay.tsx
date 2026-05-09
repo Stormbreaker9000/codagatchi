@@ -31,7 +31,7 @@ export function CreatureDisplay({ state }: Props) {
   const name = state.creature.nickname ?? state.species.name;
 
   return (
-    <div className="creature-display">
+    <div className="creature-display" data-tauri-drag-region>
       <div className="creature-name">{name}</div>
       <pre className="creature-ascii">{frames[frameIdx]}</pre>
       <div className="creature-age">Age: {state.creature.age_ticks} ticks</div>
