@@ -274,6 +274,11 @@ pub fn update_settings(conn: &Connection, patch: &SettingsPatch) -> Result<Setti
         conn.execute("UPDATE settings SET window_y=?1 WHERE id=1", params![v])?;
     }
     if let Some(v) = patch.tick_interval_secs {
+        if !(10..=3600).contains(&v) {
+            return Err(rusqlite::Error::InvalidParameterName(
+                format!("tick_interval_secs must be between 10 and 3600, got {v}"),
+            ));
+        }
         conn.execute("UPDATE settings SET tick_interval_secs=?1 WHERE id=1", params![v as i64])?;
     }
     if let Some(v) = patch.show_tray_tooltip {
