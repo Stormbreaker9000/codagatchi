@@ -160,8 +160,8 @@ pub fn count_eggs(conn: &Connection) -> Result<i32> {
 
 pub fn add_egg(conn: &Connection, now: i64) -> Result<()> {
     conn.execute(
-        "INSERT INTO creatures (hatched_at, is_active, status)
-         VALUES (?1, 0, 'egg')",
+        "INSERT INTO creatures (species_id, hatched_at, is_active, status)
+         VALUES ('', ?1, 0, 'egg')",
         params![now],
     )?;
     Ok(())

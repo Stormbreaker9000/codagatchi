@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS species (
 
 CREATE TABLE IF NOT EXISTS creatures (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    species_id  TEXT,
+    species_id  TEXT    NOT NULL DEFAULT '',
     nickname    TEXT,
     hatched_at  INTEGER NOT NULL,
     retired_at  INTEGER,
