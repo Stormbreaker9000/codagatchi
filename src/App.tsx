@@ -127,7 +127,7 @@ function App() {
                 onSwitched={() => {}}
               />
             )}
-            {tab === 'settings' && <Settings onChanged={(_: SettingsType) => {}} />}
+            {tab === 'settings' && <Settings onChanged={(_settings: SettingsType) => {}} />}
           </div>
         </div>
       )}
