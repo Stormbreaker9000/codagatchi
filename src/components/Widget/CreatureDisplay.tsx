@@ -32,9 +32,9 @@ export function CreatureDisplay({ state }: Props) {
 
   return (
     <div className="creature-display" data-tauri-drag-region>
-      <div className="creature-name">{name}</div>
-      <pre className="creature-ascii">{frames[frameIdx]}</pre>
-      <div className="creature-age">Age: {state.creature.age_ticks} ticks</div>
+      <div className="creature-name" data-tauri-drag-region>{name}</div>
+      <pre className="creature-ascii" data-tauri-drag-region>{frames[frameIdx]}</pre>
+      <div className="creature-age" data-tauri-drag-region>Age: {state.creature.age_ticks} ticks</div>
     </div>
   );
 }
